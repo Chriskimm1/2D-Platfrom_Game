@@ -3,15 +3,47 @@
     <head>
         <meta charset="UTF-8" />
         <title>hello phaser!</title>
+        <link rel="stylesheet" type="text/css" href="js/css/style.css">
         <script src="js/phaser/phaser.js"></script>
         <script src="http://code.jquery.com/jquery-latest.min.js"
         type="text/javascript"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.1/handlebars.js"></script>
        	<script src="js/assets"></script>
        	<script src="js/game/game.js"></script>
+        <script src="js/game/menu.js"></script>
         <script src="/js/phaser/phaser.js"></script>
+        <h1>NINJA PIG</h1>
+	      <div id='user-access'></div>
+	      <br>
+	      <div id='user-accounts'></div>
+        <button id="start">START GAME</button>
+    		
+
     </head>
     <body>
-    	<button>START GAME</button>
+
+    	<div id="container"></div>
+ 
+ <template id="create-user-template">
+			<input type="text" id="create-username" placeholder="username">
+	    <input type="password" id="create-password" placeholder="password">
+	    <button id="create-button">Sign Up</button>
+		</template>
+
+		<template id="login-template">
+	    <input type="text" id="login-username" placeholder="username">
+	    <input type="password" id="login-password" placeholder="password">
+	    <button id="login-button">Log In</button>
+	  </template>
+
+		 <template id="user-template">
+		    <p id="current-user" data-userid={{id}} data-high={{high_score}} data-username={{username}}>
+		    	player: 	{{username}}<br> Highscore: {{high_score}}</p>
+	    	<button id="logout-button">Logout</button>
+	    	<button id="delete-button">Delete Profile</button>
+	  </template>
+
+			
 
     </body>
 </html>

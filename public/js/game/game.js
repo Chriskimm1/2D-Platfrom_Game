@@ -1,8 +1,12 @@
 
 
-/*function startGame(){*/
-var game = new Phaser.Game(800, 400, Phaser.AUTO, '', { preload: preload, create: create, update: update});
+function startGame(){
+$("#container").empty();
+var game = new Phaser.Game(900, 450, Phaser.AUTO, '', { preload: preload, create: create, update: update});
+
+
 var player;
+var playerHealth = 300;
 var map;
 var shurikenTime = 0;
 var shurikens;
@@ -15,7 +19,10 @@ var score = 0;
 var scoreText;
 var enemyKilled = 0;
 var enemyText;
-
+var facing;
+var bossHealth = 20;
+var timeCheck;
+var winText;
 
 //loads up all the images and sprites
 function preload() {
@@ -29,7 +36,8 @@ game.load.spritesheet("coins", "js/assets/coins.png", 32,32);
 game.load.audio("jump", "js/assets/jump_07.wav");
 game.load.audio("coinsound", "js/assets/coin1.wav");
 game.load.audio("hit", "js/assets/hit.wav");
-}
+game.load.spritesheet("boss", "js/assets/pacman.png", 56, 80);
+};
 
 
 
@@ -45,6 +53,7 @@ function create() {
 
     music = game.add.audio("music")
     music.loop = true;
+    music.volume = 4;
     music.play();
 
     jump = game.add.audio("jump")
@@ -77,8 +86,21 @@ function create() {
 
 
 
-    scoreText = game.add.text(game.camera.x, game.camera.y, "Score: 0", {font: "24px Copperplate", fill:"white", align:"center" });
+    scoreText = game.add.text(game.camera.x, game.camera.y, "Score: 0 health: " + playerHealth, {font: "24px Copperplate", fill:"white", align:"center" });
     
+
+    boss = game.add.sprite(500	, 200, "boss")
+    boss.anchor.setTo(.5,1);
+    boss.scale.setTo(2,2);
+    game.physics.arcade.enable(boss);
+    boss.body.bounce.y = 0.3;
+    boss.body.gravity.y = 300;
+    boss.collideWorldBounds = true;
+    boss.animations.add("walk", [1,2,3,4,5,6,7,8,9,10], 40, true);
+		boss.play("walk", 2)
+		boss.body.bounce.setTo(1,0)
+		boss.body.velocity.x = 40
+
     ///////////////
     // PLAYER    //
     ///////////////
@@ -98,6 +120,7 @@ function create() {
     player.animations.add('right', [4, 8, 11, 3], 16, true);
     player.animations.add('up', [1], 1, true);
     player.animations.add("shoot", [15], 1, true);
+    player.animations.add("hurt", [17], 1, true);
 
     /////////////
     // BAD GUT //
@@ -196,12 +219,16 @@ function update() {
 
 	 game.physics.arcade.collide(player, collide);
 	 game.physics.arcade.collide(evilNinja, collide);
-	 game.physics.arcade.collide(player, spikes);
+	 game.physics.arcade.collide(boss, collide)
+	 game.physics.arcade.collide(player, spikes, killPlayer, null, this);	
 	 game.physics.arcade.collide(coin, collide);
 	 game.physics.arcade.overlap(player, coin, collectCoins, null, this);
 	 game.physics.arcade.overlap(shuriken, evilNinja, killNinja, null, this);
 	 game.physics.arcade.collide(evilNinja, rebound);
-	 game.physics.arcade.overlap(player, evilNinja, killPlayer, null, this);
+	 game.physics.arcade.overlap(evilNinja, player, killPlayer, null, this);
+	 game.physics.arcade.overlap(boss, shuriken, killBoss, null, this);
+
+
 	 
 	 scoreText.x = game.camera.x;
 	 scoreText.y = game.camera.y;
@@ -214,7 +241,18 @@ function update() {
 	 //defines space key
 	 spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 	 player.body.velocity.x = 0;
-    
+    ///////////////
+    // EVENTS    //
+    ///////////////
+
+    if(game.time.now - timeCheck > 3000){
+    	game.destroy()
+    }
+
+    if(playerHealth <= 0){
+    		sendScore(score)
+    		game.destroy();
+    }
     ////////////////////
     // LEFT AND RIGHT //
     ////////////////////
@@ -224,7 +262,7 @@ function update() {
         game.physics.arcade.enable(player)
         player.body.setSize(40,40,0,0)
         player.scale.setTo(-0.7,0.7)
-        player.body.velocity.x = -130;
+        player.body.velocity.x = -300;
         player.animations.play('left');
         facing = "left"
     }
@@ -232,7 +270,7 @@ function update() {
     {
         //  Move to the right
         player.scale.setTo(0.7,0.7)
-        player.body.velocity.x = 130;
+        player.body.velocity.x = 300;
         player.animations.play('right');
         facing = "right"
     }
@@ -249,7 +287,7 @@ function update() {
     //  Allow the player to jump if they are touching the ground.
     if (cursors.up.isDown && player.body.onFloor())
     {
-        player.body.velocity.y = -210;
+        player.body.velocity.y = -600;
         jump.play();
     }
     else if (cursors.up.isDown)
@@ -283,7 +321,12 @@ function fireShuriken() {
         {
             //  And fire it
             shuriken.reset(player.x, player.y + 8);
+           if (facing == "right"){
             shuriken.body.velocity.x = 400;
+           }
+           if (facing == "left"){
+           	shuriken.body.velocity.x = -400;
+           }
             shurikenTime = game.time.now + 400;
         }
     }
@@ -299,7 +342,7 @@ function collectCoins (player, coin) {
     coin.kill();
     coinsound.play();
     score += 10
-    scoreText.text = "score:" + score
+    scoreText.text = "score:" + score + "   " + "Health: " + playerHealth;
     
 }
 
@@ -316,24 +359,53 @@ function killNinja(shuriken, evilNinja){
 	evilNinja.animations.add("die", [26], 1)
 	evilNinja.animations.play("die", 1, false, true);
 	score += 20
-	scoreText.text = "score" + score;
+	scoreText.text = "score:" + score + "   " + "Health: " + playerHealth;
 	 }
 }
 
-/*function walkToggle(evilNinja){
-	if (evilNinja.body.velocity.x > 0){
-		evilNinja.body.velocity.x = -20
-	} evilNinja.body.velocity.x = 20
-	evi
-}*/
 
 function killPlayer(player){
-	player.animations.add("dead", [15], 1);
-	player.animations.play("dead", 1, false, true);
+ if(playerHealth === 0){
+ 	player.kill();
+ }
+ playerHealth -= 1
+ scoreText.text = "score:" + score + "   " + "Health: " + playerHealth;
+
+}
+
+function killBoss(boss){
+	hit.play();
+	shuriken.kill();
+	bossHealth -= 3;
+	scoreText.text = "score:" + score + "   " + "Health: " + playerHealth + " " +"BossHealth: " + bossHealth;
+
+	if(bossHealth <= 0){
+		boss.body.velocity.x = 0;
+		boss.animations.add("bossDie", [25,25], 1);
+		boss.animations.play("bossDie", 1, false, true)
+		score += 1000
+		scoreText.text = "score:" + score + "   " + "Health: " + playerHealth;
+		winText = game.add.text(game.camera.width / 2, game.camera.height / 2, {
+			font: "Copperplate",
+			fill: "white",
+			align: "center"
+		})
+		winText.fixedToCamera = true
+		winText.setText("YOU WIN SONNN!!!!")
+   	sendWinScore(score)
+   	reallyKillBoss()
+	}
+}
+
+function reallyKillBoss(){
+	timeCheck = game.time.now
 }
 
 
-/*}*/
+
+    
+
+}
 
 
 

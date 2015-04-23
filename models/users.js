@@ -4,14 +4,16 @@ module.exports = function(sequelize, DataTypes) {
     username: {
       allowNull: false,
       type: DataTypes.STRING,
-      validate: {
-        unique: true
-      }
+      unique: true
     },
     password_digest: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      allowNull: false
     },
-    high_score: DataTypes.INTEGER
+    high_score: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    }
   }, {
     underscored: true,
 
