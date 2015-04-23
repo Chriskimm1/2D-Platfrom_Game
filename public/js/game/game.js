@@ -185,7 +185,7 @@ function createCoins(){
 
 
 function createEvilNinja(){
-	var evilNinjaAmount = 100;
+	var evilNinjaAmount = 40;
 	for (var i = 0; i < evilNinjaAmount; i++){
 		evilNinjas = evilNinja.create(game.world.randomX, game.world.randomY, "evilNinja", 5, true);
 		evilNinjas.collideWorldBounds = true;
