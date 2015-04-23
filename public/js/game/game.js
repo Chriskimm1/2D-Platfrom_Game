@@ -262,7 +262,7 @@ function update() {
         game.physics.arcade.enable(player)
         player.body.setSize(40,40,0,0)
         player.scale.setTo(-0.7,0.7)
-        player.body.velocity.x = -300;
+        player.body.velocity.x = -200;
         player.animations.play('left');
         facing = "left"
     }
@@ -270,7 +270,7 @@ function update() {
     {
         //  Move to the right
         player.scale.setTo(0.7,0.7)
-        player.body.velocity.x = 300;
+        player.body.velocity.x = 200;
         player.animations.play('right');
         facing = "right"
     }
@@ -287,7 +287,7 @@ function update() {
     //  Allow the player to jump if they are touching the ground.
     if (cursors.up.isDown && player.body.onFloor())
     {
-        player.body.velocity.y = -600;
+        player.body.velocity.y = -250;
         jump.play();
     }
     else if (cursors.up.isDown)
